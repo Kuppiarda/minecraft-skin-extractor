@@ -1,7 +1,7 @@
 
 # Minecraft Skin Extractor
 
-View and extract the skin caches downloaded from the Minecraft servers you join.
+View and extract Minecraft skins cached from the servers you play on.
 
 ## Screenshots 
 
