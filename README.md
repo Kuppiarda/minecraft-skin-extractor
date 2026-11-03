@@ -19,7 +19,7 @@ View and extract the skin caches downloaded from the Minecraft servers you join.
 1. [Download the ZIP file](https://github.com/Kuppiarda/minecraft-skin-extractor/archive/refs/heads/main.zip).
 2. Extract the ZIP file.
 3. Open the extracted project folder.
-4. Run `setup.bat` or manually install the dependencies using `pip install -r requirements.txt`
+4. Run `setup.bat` or manually install the dependencies using `pip install -r requirements.txt`.
 
 **Option 2: Clone with Git**
 ```
@@ -29,7 +29,7 @@ setup.bat
 ```
 
 ## Running
-1. Run `run_ui.bat` or activate the virtual environment and execute `python main.py`.
+Run `run_ui.bat` or activate the virtual environment and execute `python main.py`.
 
 ## Third-Party Libraries
 
