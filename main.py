@@ -220,7 +220,8 @@ def show_gallery(web_view):
     color_button.clicked.connect(select_color)
 
     # Kaynak klasörü  seçimi
-    folder_button = QPushButton("Select skin source folder")
+    folder_button = QPushButton("Select skin source folder (assets/skins)")
+    folder_button.setToolTip("Select the folder where Minecraft skins are stored (usually %appdata%/.minecraft/assets/skins)")
     folder_button.clicked.connect(
         lambda: reload_gallery(
             select_folder(),
