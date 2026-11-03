@@ -95,8 +95,8 @@ def show_gallery(web_view):
     # Title kısmı
     title_layout = QHBoxLayout()
 
-    gallery_title = QLabel("Skinler")
-    skin_count_label = QLabel("0 dosya")
+    gallery_title = QLabel("Skins")
+    skin_count_label = QLabel("0 files")
 
     title_layout.addWidget(gallery_title)
     title_layout.addStretch() # Arada boşluk olsun, sağ tarafta olsun diye sayı dosya şeyi
@@ -119,11 +119,11 @@ def show_gallery(web_view):
     gallery_layout.addWidget(skin_list)
 
     # Seçilenleri indirme
-    download_button = QPushButton("Seçilenleri indir (0)")
+    download_button = QPushButton("Download selected (0)")
 
     def update_selection_count():
         count = len(skin_list.selectedItems())
-        download_button.setText(f"Seçilenleri indir ({count})")
+        download_button.setText(f"Download selected ({count})")
 
     skin_list.itemSelectionChanged.connect(update_selection_count)
 
@@ -146,14 +146,14 @@ def show_gallery(web_view):
 
     # Arama
     search_input = QLineEdit()
-    search_input.setPlaceholderText("Skin ara")
+    search_input.setPlaceholderText("Search skins by filename...")
     gallery_layout.addWidget(search_input)
 
     # Renk seçme
     color_layout = QHBoxLayout()
 
-    color_button = QPushButton("Renk ile filtrele")
-    color_filter_checkbox = QCheckBox("Renk filtresini kullan")
+    color_button = QPushButton("Filter by color")
+    color_filter_checkbox = QCheckBox("Use color filter")
 
     color_layout.addWidget(color_button, 1)
     color_layout.addWidget(color_filter_checkbox, 0, Qt.AlignmentFlag.AlignRight) # Sağa dayalı checkbox
@@ -161,7 +161,7 @@ def show_gallery(web_view):
     gallery_layout.addLayout(color_layout)
 
     # Threshold
-    threshold_label = QLabel("Renk eşiği: 50")
+    threshold_label = QLabel("Threshold: 50")
 
     threshold_slider = QSlider(Qt.Orientation.Horizontal)
     threshold_slider.setRange(0, 440)
@@ -196,14 +196,14 @@ def show_gallery(web_view):
         total_count = skin_list.count()
 
         skin_count_label.setText(
-            f"{visible_count}/{total_count} dosya"
+            f"{visible_count}/{total_count} files"
         )
 
     search_input.textChanged.connect(lambda _: apply_filters())
     color_filter_checkbox.toggled.connect(lambda _: apply_filters()) # Filtreleri uygulama tek bölgede daha düzenli oldu
 
     def on_threshold_changed(value):
-        threshold_label.setText(f"Renk eşiği: {value}")
+        threshold_label.setText(f"Threshold: {value}")
         apply_filters()
 
     threshold_slider.valueChanged.connect(on_threshold_changed)
@@ -220,7 +220,7 @@ def show_gallery(web_view):
     color_button.clicked.connect(select_color)
 
     # Kaynak klasörü  seçimi
-    folder_button = QPushButton("Kaynak klasörü seç")
+    folder_button = QPushButton("Select skin source folder")
     folder_button.clicked.connect(
         lambda: reload_gallery(
             select_folder(),
@@ -285,9 +285,9 @@ def show_viewer():
     auto_rotate = True
     walking = False
 
-    download_current_button = QPushButton("Skini indir")
-    auto_rotate_button = QPushButton("Otomatik döndürme: açık")
-    walking_button = QPushButton("Yürüme: kapalı")
+    download_current_button = QPushButton("Download skin")
+    auto_rotate_button = QPushButton("Auto rotate: on")
+    walking_button = QPushButton("Walking: off")
     viewer_layout.addWidget(download_current_button)
     viewer_layout.addWidget(auto_rotate_button)
     viewer_layout.addWidget(walking_button)
@@ -301,8 +301,8 @@ def show_viewer():
             f"toggleAutoRotate({str(auto_rotate).lower()})"
         )
 
-        status = "açık" if auto_rotate else "kapalı"
-        auto_rotate_button.setText(f"Otomatik döndürme: {status}")
+        status = "on" if auto_rotate else "off"
+        auto_rotate_button.setText(f"Auto rotate: {status}")
 
     auto_rotate_button.clicked.connect(toggle_auto_rotate)
 
@@ -315,8 +315,8 @@ def show_viewer():
             f"toggleWalking({str(walking).lower()})"
         )
 
-        status = "açık" if walking else "kapalı"
-        walking_button.setText(f"Yürüme: {status}")
+        status = "on" if walking else "off"
+        walking_button.setText(f"Walking: {status}")
 
     walking_button.clicked.connect(toggle_walking)
 
@@ -407,10 +407,7 @@ def display_skins(skin_list, skin_directory=None):
     return skin_list.count()
 
 def select_folder():
-    return QFileDialog.getExistingDirectory(
-        None,
-        "Skin kaynak klasörünü seç"
-    )    
+    return QFileDialog.getExistingDirectory(None, "Choose skin source/assets folder")    
 
 def reload_gallery(folder, skin_list, skin_count_label, color_cache, apply_filters):
     if folder is None:
@@ -422,7 +419,7 @@ def reload_gallery(folder, skin_list, skin_count_label, color_cache, apply_filte
         count = display_skins(skin_list, folder)
 
     color_cache.clear()
-    skin_count_label.setText(f"{count}/{count} dosya")
+    skin_count_label.setText(f"{count}/{count} files")
 
     apply_filters()
 
@@ -430,10 +427,7 @@ def download_skin(skin_paths):
     if not skin_paths:
         return
 
-    destination = QFileDialog.getExistingDirectory(
-        None,
-        "İndirme klasörünü seç"
-    )
+    destination = QFileDialog.getExistingDirectory(None, "Select download folder")
 
     if not destination:
         return
@@ -443,9 +437,7 @@ def download_skin(skin_paths):
 
 def load_skin_paths(skin_directory=None):
     if skin_directory is None:
-        skin_directory = (
-            Path.home() / "AppData" / "Roaming" / ".minecraft" / "assets" / "skins"
-        )
+        skin_directory = (Path.home() / "AppData" / "Roaming" / ".minecraft" / "assets" / "skins")
     else:
         skin_directory = Path(skin_directory)
 
