@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<!--
+Copyright (C) 2026 Kuppiarda
+This file is part of Minecraft Skin Extractor.
+Licensed under the GNU GPL v3.0.
+-->
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            background-color: #333;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #858d9c;
+            font: 12px 'Segoe UI', sans-serif;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="skin_container"></canvas>
+
+    <div id="controls">
+        Sürükle: döndür · Tekerlek: yakınlaştır / uzaklaştır
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/skinview3d@3.4.2/bundles/skinview3d.bundle.js"></script> <!-- skinview3d importu -->
+
+    <script>
+        const skinViewer = new skinview3d.SkinViewer({
+            canvas: document.getElementById("skin_container"),
+            width: window.innerWidth,
+            height: window.innerHeight,
+            zoom: 0.6
+        });
+
+        window.addEventListener("resize", () => {
+            skinViewer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        skinViewer.autoRotate = true; // Otomatik döndürme, ilerde togglelı olacak ya da zaten olmuştur
+
+        function toggleAutoRotate(enabled) {
+            skinViewer.autoRotate = enabled;
+        }
+
+        function toggleWalking(enabled) {
+            if (enabled) {
+                skinViewer.animation = new skinview3d.WalkingAnimation();
+            } else {
+                skinViewer.animation = null;
+            }
+        }        
+
+        function changeSkin(skinPath) {
+            skinViewer.loadSkin(skinPath);
+        }
+    </script>
+</body>
+</html>
