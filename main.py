@@ -21,7 +21,7 @@ def main():
 
     # Genel pencere ayarları
     window = QMainWindow()
-    window.setWindowTitle("Minecraft Skin Extractor")
+    window.setWindowTitle("Skin Extractor")
     window.resize(1000, 600)
 
     # Ana widget/layout oluşturulma kısmı
