@@ -8,10 +8,10 @@ import shutil
 from pathlib import Path
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWebEngineCore import QWebEngineSettings
-from PySide6.QtWidgets import QApplication, QCheckBox, QMainWindow, QSlider, QWidget, QHBoxLayout, QFrame, QLabel, QLineEdit, QVBoxLayout, QFileDialog, QPushButton, QColorDialog, QListWidget, QListWidgetItem
+from PySide6.QtWidgets import QApplication, QCheckBox, QMainWindow, QSlider, QWidget, QHBoxLayout, QFrame, QLabel, QLineEdit, QVBoxLayout, QFileDialog, QPushButton, QColorDialog, QListWidget, QListWidgetItem, QComboBox
 from PySide6.QtCore import Qt, QUrl, QSize
 from PySide6.QtGui import QFontMetrics, QPixmap, QImage, QIcon
-from PIL import Image
+from PIL import Image, ImageStat
 
 
 def main():
@@ -140,9 +140,20 @@ def show_gallery(web_view):
         if current else None
     )
 
-    # Renk/isim filtresi işleri
+    #
     target_color = None
     color_cache = {}
+    current_folder = None
+
+    # Sıralama
+    sort_combo = QComboBox()
+    sort_combo.addItems([
+        "Newest First",
+        "Oldest First"
+    ])
+    sort_combo.currentTextChanged.connect(lambda order: sort_existing_items(skin_list, order))    
+
+    gallery_layout.addWidget(sort_combo)
 
     # Arama
     search_input = QLineEdit()
@@ -166,6 +177,7 @@ def show_gallery(web_view):
     threshold_slider = QSlider(Qt.Orientation.Horizontal)
     threshold_slider.setRange(0, 440)
     threshold_slider.setSingleStep(5)
+    threshold_slider.setTracking(False)
     threshold_slider.setValue(50)
 
     threshold_layout = QHBoxLayout()
@@ -222,16 +234,24 @@ def show_gallery(web_view):
     # Kaynak klasörü  seçimi
     folder_button = QPushButton("Select skin source folder (assets/skins)")
     folder_button.setToolTip("Select the folder where Minecraft skins are stored (usually %appdata%/.minecraft/assets/skins)")
-    folder_button.clicked.connect(
-        lambda: reload_gallery(
-            select_folder(),
-            skin_list,
-            skin_count_label,
-            color_cache,
-            apply_filters
-        )
-    )
 
+    def choose_skin_folder():
+        nonlocal current_folder
+
+        folder = select_folder()
+
+        if folder:
+            current_folder = folder
+
+            reload_gallery(
+                current_folder,
+                skin_list,
+                skin_count_label,
+                color_cache,
+                apply_filters
+            )
+
+    folder_button.clicked.connect(choose_skin_folder)
     gallery_layout.addWidget(folder_button)
 
     # İndirme
@@ -332,28 +352,20 @@ def show_viewer():
 def filter_skins(skin_list, search_text, target_color=None, threshold=0, color_cache=None):
     search_text = search_text.casefold() # Büyük küçük önemsiz kalsın
 
-    if color_cache is None: # İlk filtrelemede renklere cache olsun
-        color_cache = {}
-
     for index in range(skin_list.count()):
 
         # Tanımlamalar
         item = skin_list.item(index)
-        skin_path = Path(item.data(Qt.ItemDataRole.UserRole))
+        skin_path = item.data(Qt.ItemDataRole.UserRole)
 
         # İsim filtrelemesi
-        name_match = search_text in skin_path.name.casefold()
+        name_match = search_text in Path(skin_path).name.casefold()
 
         # Renk filtresi kısmı
-
         color_match = True
+
         if target_color is not None:
-            _skin_path = str(skin_path)
-
-            if _skin_path not in color_cache:
-                color_cache[_skin_path] = get_average_color(skin_path)
-
-            average_color = color_cache[_skin_path]
+            average_color = color_cache[skin_path]
 
             distance = sum(
                 (average_color[i] - target_color[i]) ** 2
@@ -367,7 +379,14 @@ def filter_skins(skin_list, search_text, target_color=None, threshold=0, color_c
 def make_thumbnail(skin_path):
     try:
         image = Image.open(skin_path).convert("RGBA")
-        image.thumbnail((96, 96), Image.Resampling.NEAREST) # 96x96 thumbnail oluşturuyor, büyütme yapmıyor
+
+        # dahil edilmemesi gereken saydam kısımlar filtreleniyor
+        alpha = image.getchannel("A")
+        visible_mask = alpha.point(lambda value: 255 if value > 0 else 0)
+        stats = ImageStat.Stat(image, mask=visible_mask)
+        average_color = tuple(round(value) for value in stats.mean[:3])
+
+        image.thumbnail((96, 96), Image.Resampling.NEAREST)
 
         canvas = Image.new("RGBA", (112, 112), (0, 0, 0, 0))
 
@@ -379,47 +398,62 @@ def make_thumbnail(skin_path):
         image_data = canvas.tobytes("raw", "RGBA")
         qimage = QImage(image_data, 112, 112, QImage.Format.Format_RGBA8888).copy()
 
-        return QPixmap.fromImage(qimage)
+        return QPixmap.fromImage(qimage), average_color
 
     except Exception:
         return None
 
-def display_skins(skin_list, skin_directory=None):
-    skin_list.clear()
-
+def display_skins(skin_list, color_cache, skin_directory=None):
     skin_paths = load_skin_paths(skin_directory)
 
     font_metrics = QFontMetrics(skin_list.font())
 
     for skin_path in skin_paths:
-        thumbnail = make_thumbnail(skin_path) # Hızlı olması için thumbnail, gerçek fotonun kendisi değil
+        result = make_thumbnail(skin_path) # Result çünkü average color da burdan gelecek 2x dosya masrafı olmasın diye
 
-        if thumbnail is None:
+        if result is None:
             continue
 
-        text = font_metrics.elidedText(skin_path.name, Qt.TextElideMode.ElideRight, 80) # x pikselden fazlaysa kırp
-        item = QListWidgetItem(QIcon(thumbnail), text)
+        thumbnail, average_color = result
 
-        item.setData(Qt.ItemDataRole.UserRole, str(skin_path))
-        item.setToolTip(str(skin_path)) # Fareyle gelince full path görünmesi için
+        color_cache[str(skin_path)] = average_color
 
-        skin_list.addItem(item) # Fonksiyon dışına ekleniyor
+        text = font_metrics.elidedText(skin_path.name, Qt.TextElideMode.ElideRight, 80)
+
+        item = SkinItem(QIcon(thumbnail), text)
+
+        item.setData(Qt.ItemDataRole.UserRole, str(skin_path)) # Yol
+        item.setData(Qt.ItemDataRole.UserRole + 1, skin_path.stat().st_ctime) # Oluşturulma zamanı
+        item.setToolTip(str(skin_path)) # Fareyle gelince full path görünmesi için, belki başka veriler eklenebilir sonradan
+
+        skin_list.addItem(item)
 
     return skin_list.count()
+
+def sort_existing_items(skin_list, sort_order):
+    order = (
+        Qt.SortOrder.DescendingOrder
+        if sort_order == "Newest First"
+        else Qt.SortOrder.AscendingOrder
+    )
+
+    skin_list.sortItems(order)
 
 def select_folder():
     return QFileDialog.getExistingDirectory(None, "Choose skin source/assets folder")    
 
 def reload_gallery(folder, skin_list, skin_count_label, color_cache, apply_filters):
+    skin_list.clear() # Tekrar yükleneceği için sıfırlanmalı
+    color_cache.clear() # ^
+
     if folder is None:
-        count = display_skins(skin_list)
+        count = display_skins(skin_list, color_cache)
     else:
         if not folder:
             return
 
-        count = display_skins(skin_list, folder)
+        count = display_skins(skin_list, color_cache, folder)
 
-    color_cache.clear()
     skin_count_label.setText(f"{count}/{count} files")
 
     apply_filters()
@@ -448,32 +482,25 @@ def load_skin_paths(skin_directory=None):
         if file_path.is_file():
             skin_paths.append(file_path)
 
-    return skin_paths
+    return sorted(
+        skin_paths,
+        key=lambda path: path.stat().st_ctime,
+        reverse=True
+    )
+
 
 #########################################
 
-def get_average_color(skin_path):
-    image = Image.open(skin_path).convert("RGBA")
-    pixels = list(image.getdata())
 
-    visible_pixels = [
-        (r, g, b)
-        for r, g, b, a in pixels
-        if a > 0 # Sadece görünürler olcak diğerleri dahil değil
-    ]
+class SkinItem(QListWidgetItem):
 
-    if not visible_pixels:
-        return (0, 0, 0)
-
-    count = len(visible_pixels)
-
-    average = tuple(
-        sum(pixel[channel] for pixel in visible_pixels) // count
-        for channel in range(3)
-    )
-
-    return average
-
+    # Sıralama yapmak için küçüktürün davranışını değişmek gerekiyor
+    def __lt__(self, other):
+        return (
+            self.data(Qt.ItemDataRole.UserRole + 1)
+            < other.data(Qt.ItemDataRole.UserRole + 1)
+        )
+    
 
 
 
