@@ -34,11 +34,11 @@ Run `run_ui.bat` or activate the virtual environment and execute `python main.py
 ## Third-Party Libraries
 
 - [skinview3d](https://github.com/bs-community/skinview3d) - MIT License
-- [PySide6](https://doc.qt.io/qtforpython-6/) - LGPLv3
+- [PySide6](https://doc.qt.io/qtforpython-6/) - LGPLv3 License
 - [Pillow](https://python-pillow.org/) - MIT-CMU License
 
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
 
-Third-party libraries are distributed under their respective licenses. See the `THIRD-PARTY-LICENSES` directory for additional license information.
+Third-party libraries are distributed under their respective licenses. See the [THIRD-PARTY-LICENSES](THIRD-PARTY-LICENSES) directory for additional license information.
