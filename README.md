@@ -28,7 +28,7 @@ cd minecraft-skin-extractor
 setup.bat
 ```
 
-## Running
+### Running
 Run `run_ui.bat` or activate the virtual environment and execute `python main.py`.
 
 ## Third-Party Libraries
