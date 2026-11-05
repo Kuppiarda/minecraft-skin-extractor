@@ -16,10 +16,8 @@ View and extract Minecraft skins cached from the servers you play on.
 ### Installation
 **Option 1: Download ZIP**
 
-1. [Download the ZIP file](https://github.com/Kuppiarda/minecraft-skin-extractor/archive/refs/heads/main.zip).
-2. Extract the ZIP file.
-3. Open the extracted project folder.
-4. Run `setup.bat` or manually install the dependencies using `pip install -r requirements.txt`.
+1. [Download and extract the ZIP file](https://github.com/Kuppiarda/minecraft-skin-extractor/archive/refs/heads/main.zip).
+2. Run `setup.bat` or manually install the dependencies using `pip install -r requirements.txt`.
 
 **Option 2: Clone with Git**
 ```
@@ -29,7 +27,7 @@ setup.bat
 ```
 
 ### Running
-Run `run_ui.bat` or activate the virtual environment and execute `python main.py`.
+Run `run_ui.bat` or activate the virtual environment (`.venv\Scripts\activate`) and then execute `python main.py`.
 
 ## Third-Party Libraries
 
